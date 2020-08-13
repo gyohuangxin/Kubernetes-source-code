@@ -23,7 +23,6 @@ func main() {
     panic(err)
   }
 }
-
 ```
 
 ## RESTClient 客户端
@@ -76,5 +75,52 @@ func main() {
 	d.Name, d.Status.Phase)
   }
 }
+```
+
+其中RESTClient的发送HTTP请求的过程是对Go语言标准库net/http的封装。
+
+## ClientSet 客户端
+相比于RESTClient，ClientSet使用上更加的敏捷，编写代码时不需要提前知道Resource所在的Group和对应的Version信息，所以在开发者中ClientSet使用的更加广泛。
+ClientSet在RESTClient的基础上封装了对Resource和Version的管理方法，每个Resource可以理解为一个客户端，而ClientSet则是多个客户端的集合，每个Resource和Version都以函数的形式暴露给开发者。
+** 注意：ClientSet仅仅能访问Kubernetes自身内置的资源，不能直接访问CRD自定义资源，如果需要ClientSet访问CRD自定义资源，可以通过client-gen代码生成器重新生成ClientSet，在ClientSet集合中自动生成于CRD操作相关的接口。
+
+类似于kubectl命令，通过RESTClient列出所有运行的Pod资源对象，RESTClient Example代码示例如下：
 
 ```
+package main
+
+import (
+  "fmt"
+  
+  apiv1 "k8s.io/api/core/v1"
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+  "k8s.io/client-go/kubernetes"
+  "k8s.io/client-go/tools/clientcmd"
+)
+
+func main() {
+  config, err := clientcmd.BuildConfigFromFlags("",
+  "root/.kube/config")
+  if err != nil {
+    panic(err)
+  }
+
+  clientset, err := kubernetes.NewForConfig(config)
+  if err != nil {
+    panic(err)
+  }
+  podClient := clientset.CoreV1().Pods(apiv1.NamespaceDefault)
+
+  list, err := podClient.List(metafv1.ListOptions{Limit:500})
+  if err != nil {
+    panic(err)
+  }
+
+  for _, d := range list.Items {
+    fmt.Printf("NAMESPACE: %v \t NAME: %v \t STATU: %+v\n", d.Namespace,
+	d.Name, d.Status.Phase)
+  }
+}
+```
+
+
