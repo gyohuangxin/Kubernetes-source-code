@@ -82,7 +82,8 @@ func main() {
 ## ClientSet 客户端
 相比于RESTClient，ClientSet使用上更加的敏捷，编写代码时不需要提前知道Resource所在的Group和对应的Version信息，所以在开发者中ClientSet使用的更加广泛。
 ClientSet在RESTClient的基础上封装了对Resource和Version的管理方法，每个Resource可以理解为一个客户端，而ClientSet则是多个客户端的集合，每个Resource和Version都以函数的形式暴露给开发者。
-** 注意：ClientSet仅仅能访问Kubernetes自身内置的资源，不能直接访问CRD自定义资源，如果需要ClientSet访问CRD自定义资源，可以通过client-gen代码生成器重新生成ClientSet，在ClientSet集合中自动生成于CRD操作相关的接口。
+
+**注意：ClientSet仅仅能访问Kubernetes自身内置的资源，不能直接访问CRD自定义资源，如果需要ClientSet访问CRD自定义资源，可以通过client-gen代码生成器重新生成ClientSet，在ClientSet集合中自动生成于CRD操作相关的接口。**
 
 类似于kubectl命令，通过RESTClient列出所有运行的Pod资源对象，RESTClient Example代码示例如下：
 
@@ -123,4 +124,13 @@ func main() {
 }
 ```
 
+## DynamicClient 客户端
+
+DynamicClient是一种动态客户端，内部实现了Unstructured，用于处理非结构化数据结构（即无法提前预知的数据结构）, 这也是DynamicClient能够处理CRD的关键。
+
+**注意：DynamicClient不是类型安全的，在操作指针不当的情况下可能会导致程序崩溃。**
+
+## DiscoveryClient 客户端
+
+DiscoveryClient是发现客户端，它主要用于发现Kubernetes API Server所支持的资源组、资源版本、资源信息。还可以将这些信息存储到本地，用于本地缓存，默认路径是～/.kube/cache 和 ～/.kube/http-cache，默认缓存周期是10分钟。
 
