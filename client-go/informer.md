@@ -32,15 +32,23 @@ Informer 通过 Kubernetes Watch API 监听某种 resource 下的所有事件。
 
 ## Reflector
 Reflector的源码实现中最重要的是ListAndWatch函数，它负责获取资源列表（List）和监控（Watch）指定的Kubernetes API Server资源。
+
 1. List
+
 List在第一次运行时会获取该资源对象数据并将其存储至DeltaFIFO中，List的主要流程：
+
 （1) r.listerWatcher.List用于获取资源下的所有对象的数据。
+
 （2) listMetaInterface.GetResourceVersion用于获取资源版本号，ResourceVersion非常重要，它标志当前资源对象的版本号，每次修改当前资源时API Server都会更改ResourceVersion，这样client-go在执行Watch操作时可以根据ResourceVersion来确定当前资源对象是否发生变化。
+
 （3）meta.ExtractList用于将资源转化成资源对象列表，将runtime.Object对象转化成[]runtime.Object对象。
+
 （4）r.syncWith将资源对象列表中的资源对象和资源版本号存储至DeltaFIFO中，并替换已有的对象。
+
 （5）r.setLastSyncResourceVersion设置最新的资源版本号。
 
 2. Watch
+
 Watch通过HTTP协议与Kubernetes API Server建立长连接，接收Kubernetes发来的资源变更事件。Watch使用的HTTP协议的分块传输编码（Chunked Transfer Encoding）。当client-go调用Kubernetes API Server时，API Server会在Response中的HTTP Header中设置Transfer-Encoding的值为Chunked，客户端收到该消息后，便于服务端进行连接，并等待下一个数据块（即资源的事件信息）。
 
 ## DeltaFIFO
