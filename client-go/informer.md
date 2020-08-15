@@ -52,3 +52,73 @@ List在第一次运行时会获取该资源对象数据并将其存储至DeltaFI
 Watch通过HTTP协议与Kubernetes API Server建立长连接，接收Kubernetes发来的资源变更事件。Watch使用的HTTP协议的分块传输编码（Chunked Transfer Encoding）。当client-go调用Kubernetes API Server时，API Server会在Response中的HTTP Header中设置Transfer-Encoding的值为Chunked，客户端收到该消息后，便于服务端进行连接，并等待下一个数据块（即资源的事件信息）。
 
 ## DeltaFIFO
+
+DeltaFIFO和其他队列最大的不同就是它会保留所有关于资源对象（obj）的操作类型。
+
+DeltaFIFO结构示例代码如下：
+
+```
+type DeltaFIFO struct {
+    ...
+    items map[string]Deltas
+    queue []string
+    ...
+}
+type Deltas []Delta
+```
+
+DeltaFIFO的存储结构如下：
+queue  ObjKey1 | ObjKey2 | ObjKey3
+items  ObjKey1: [{"Added", Obj1}, {"Updated", Obj1}]
+       ObjKey2: [{"Added", Obj2}, {"Deleted", obj2}, {"Updated", obj1}]
+       ObjKey3: [{"Added", Obj3}, {"Updated", obj3}, {"Deleted", obj3}]
+
+DeltaFIFO本质上是一个先进先出的队列，有数据的生产者和消费者，其中生产者是Reflector调用的Add方法，消费者是Controller调用的Pop方法。
+
+## Indexer
+
+通过Indexer Example理解Indexer:
+```
+package main
+
+import (
+    "fmt"
+    "strings"
+
+    "k8s.io/api/core/v1"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/client-go/tools/cache"
+)
+
+func UsersIndexFunc(obj interface{}) ([]string, error) {
+    pod := obj.(*v1.Pod)
+    usersString := pod.Annotations["Users"]
+
+    return strings.Split(userString, ","), nil
+}
+
+func main() {
+    index := cache.NewIndexer(cache.MetaNamespaceKyeFunc,
+        cache.Indexers{"byUser": UsersIndexFunc})
+
+    pod1 := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "one",
+        Annotations: map[string]string{"users": "ernie,bert"}}}
+    pod2 := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "two",
+        Annotations: map[string]string{"users": "bert,oscar"}}}
+    pod3 := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "tre",
+        Annotations: map[string]string{"users": "ernie,elmo"}}}
+
+    index.Add(pod1)
+    index.Add(pod2)
+    index.Add(pod3)
+
+    erniePods, err := index.ByIndex("byUser", "ernie")
+    if err != nil {
+        panic(err)
+    }
+
+    for _, erniePod := range erniePods {
+        fmt.Println(erniePod.(*v1.Pod).Name)
+    }
+}
+```
