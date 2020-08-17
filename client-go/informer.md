@@ -19,7 +19,9 @@ Reflector用于监控（Watch）指定的Kubernetes资源，当监控的资源�
 FIFO是一个先进先出的队列，而Delta是一个资源对象存储，它可以保存资源对象的操作类型，例如Added，Updated，Deleted，Sync操作类型等。
 
 3.Indexer
-Indexer是client-go用来存储资源对象并自带索引功能的本地存储，Reflector从DeltaFIFO中将消费出来的资源对象存储到Indexer中。Indexer与Etcd集群中的数据完全保持一致。client-go可以方便的从本地存储中读取相应的资源对象数据，而无须每次从远程Etcd集群中读取。
+Indexer是client-go用来存储资源对象并自带索引功能的本地存储，Reflector从DeltaFIFO中将消费出来的资源对象存储到Indexer中。Indexer与Etcd集群中的数据完全保持一致。client-go可以方便的从本地存储中读取相应的资源对象数据，而无须每次从远程Etcd集群中读取。Indexer/LocalStore 只会被 Lister 的 List/Get 方法访问
+
+4.WorkQueue：DeltaIFIFO 收到事件后会先将事件存储在自己的数据结构中，然后直接操作 Store 中存储的数据，更新完 store 后 DeltaIFIFO 会将该事件 pop 到 WorkQueue 中，Controller 收到 WorkQueue 中的事件会根据对应的类型触发对应的回调函数。
 
 ## Informer机制中的关键点
 1.更快地返回 List/Get 请求，减少对 Kubenetes API 的直接调用
