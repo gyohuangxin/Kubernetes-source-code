@@ -2,6 +2,10 @@
 
 在Kubernetes中组件之间通过HTTP协议通信，在不依赖任何中间件的情况下需要保证消息的实时性、可靠性、顺序性等，那就需要用到Informer机制。Kubernetes的其他组件都是通过client-go的Informer机制与Kubernetes API Server进行通信的。
 
+Informer 中主要有 Reflector、Delta FIFO Queue、Local Store、WorkQueue 几个组件。以下是 Informer 的工作流程图。
+
+![avatar](../home/../pictures/informers.png)
+
 **Informer是一个持续运行的goroutine**
 
 Informer 是 Client-go 中的一个核心工具包。在 Kubernetes 源码中，如果 Kubernetes 的某个组件，需要 List/Get Kubernetes 中的 Object，在绝大多 数情况下，会直接使用 Informer 实例中的 Lister()方法（该方法包含 了 Get 和 List 方法），而很少直接请求 Kubernetes API。Informer 最基本 的功能就是 List/Get Kubernetes 中的 Object。
