@@ -18,8 +18,11 @@ Kubernetes中的工作队列（workqueue）和普通FIFO（先进先出）队列
 · Metric
 
 WorkQueue支持三种队列，并提供了三种接口：
+
 · Interface： FIFO队列接口，支持去重机制。
+
 · DelayingInterface： 延迟队列接口，基于Interface接口封装，延迟一段时间后将元素存入队列。
+
 · RateLimitingInterface： 限速队列接口，基于DelayingInterface进行封装，支持元素存入队列时进行速率限制。
 
 ## FIFO队列
