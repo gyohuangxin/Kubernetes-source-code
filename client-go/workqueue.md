@@ -78,3 +78,5 @@ type delayingType struct {
 ```
 
 delayingType结构中最重要的字段是waitingForAddCH, 其默认初始大小为1000，通过AddAfter方法插入元素事，是非阻塞状态的，只有当插入元素大于或等于1000时，延迟队列才会处于阻塞状态。waitingForAddCh字段中的数据通过goroutine运行的waitingLoop函数持久运行。
+
+## 限速队列
