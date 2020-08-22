@@ -80,3 +80,14 @@ type delayingType struct {
 delayingType结构中最重要的字段是waitingForAddCH, 其默认初始大小为1000，通过AddAfter方法插入元素事，是非阻塞状态的，只有当插入元素大于或等于1000时，延迟队列才会处于阻塞状态。waitingForAddCh字段中的数据通过goroutine运行的waitingLoop函数持久运行。
 
 ## 限速队列
+限速队列，基于延迟队列和FIFO队列接口封装，限速队列接口（RateLimmitingInterface）在原有功能上增加了AddRateLimited、Forget、NumRequeues方法。限速队列的重点不在于RateLimitingInterface接口，而在于它提供的4种限速算法接口（RateLimiter）。其原理是，限速队列利用延迟队列的特性，延迟某个元素的插入时间，达到限速目的。RateLimiter数据结构如下：
+
+```
+type RateLimiter interface {
+    When(item interface{}) time.Duration // 获取指定元素应该等待的时间
+    Forget(item interface{}) // 释放指定元素，清空该元素的排队数
+    NumRequeues(item interface{}) int // 获取指定元素的排队数
+}
+```
+
+**限速周期：一个周期是从执行AddRateLimited方法到执行完Forget方法之间的时间，如果该元素被Forget方法处理完，则清空排队数**
