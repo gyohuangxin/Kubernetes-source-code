@@ -92,6 +92,8 @@ type RateLimiter interface {
 
 **限速周期：一个周期是从执行AddRateLimited方法到执行完Forget方法之间的时间，如果该元素被Forget方法处理完，则清空排队数**
 
+四种限速算法:
+
 1. 令牌桶算法
 
 2. 排队指数算法
